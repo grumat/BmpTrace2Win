@@ -11,7 +11,7 @@ public:
 		READ_BUF_SIZE = 256,
 	};
 public:
-	CTelnetLink();
+	CTelnetLink(const ISwoFormatter &fmt);
 	virtual ~CTelnetLink();
 
 public:
@@ -22,7 +22,7 @@ public:
 
 protected:
 	void Listen(unsigned int iPort);
-	virtual bool IsTargetActive() override
+	virtual bool IsTargetActive() const override
 	{
 		return IsListening();
 	}
@@ -33,6 +33,7 @@ protected:
 
 protected:
 	CAtlList<SwoMessage> m_SwoMessages;
+	const ISwoFormatter &m_Fmt;
 
 protected:
 	SOCKET m_ListenSock;

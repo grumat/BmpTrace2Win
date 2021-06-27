@@ -3,6 +3,9 @@
 #include "TheLogger.h"
 
 
+DWORD SwoMessage::m_TimeBase;
+
+
 using namespace Logger;
 
 
@@ -14,9 +17,11 @@ CBmpSwo::CBmpSwo()
 	, m_TargetCount(0)
 	, m_CurCount(0)
 	, m_Addr(0)
+	, m_fLFSeen(false)
 {
 	ZeroMemory(&m_DeviceDescriptor, sizeof(m_DeviceDescriptor));
 	ZeroMemory(&m_ConfigDescriptor, sizeof(m_ConfigDescriptor));
+	SwoMessage::InitTimeBase();
 }
 
 
@@ -360,6 +365,11 @@ void CBmpSwo::Open()
 		Error(_T("Communication pipes could not be found. Device can't be used!\n"));
 		AtlThrow(HRESULT_FROM_WIN32(ERROR_BAD_UNIT));
 	}
+
+	long val = 10;
+	m_Device.SetPipePolicy(m_PipeIn, PIPE_TRANSFER_TIMEOUT, sizeof(val), &val);
+	// Time base
+	SwoMessage::InitTimeBase();
 }
 
 
@@ -371,8 +381,12 @@ void CBmpSwo::Close()
 
 void CBmpSwo::Flush(ISwoTarget &itf)
 {
-	itf.Send(m_CurMessage);
-	m_CurMessage.Clear();
+	if(!m_CurMessage.IsClear())
+	{
+		itf.Send(m_CurMessage);
+		m_CurMessage.Clear();
+	}
+	m_fLFSeen = false;
 }
 
 
@@ -383,16 +397,21 @@ void CBmpSwo::HandleTS(ISwoTarget &itf)
 
 void CBmpSwo::HandleSWIT(ISwoTarget &itf)
 {
-	if (!m_CurMessage.IsClear() && m_Addr != m_CurMessage.ctx)
+	if (!m_CurMessage.IsClear() && m_Addr != m_CurMessage.chan)
 		Flush(itf);
-	m_CurMessage.ctx = m_Addr;
+	m_CurMessage.chan = m_Addr;
 	for (size_t i = 0; i < m_CurCount; ++i)
 	{
 		char ch = m_RxPacket[i];
-		m_CurMessage.msg += ch;
 		if (ch == '\r' || ch == '\n')
+			m_fLFSeen = true;
+		else if (m_fLFSeen)
 			Flush(itf);
+		if(ch)
+			m_CurMessage.msg += ch;
 	}
+	if(m_fLFSeen)
+		Flush(itf);
 }
 
 
@@ -520,34 +539,18 @@ void CBmpSwo::DoTrace(ISwoTarget &itf)
 	BYTE buffer[READ_BUFFER_BYTES + 1];
 	ULONG xfered;
 
-	OVERLAPPED op;
-	memset(&op, 0, sizeof(op));
-	op.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-	bool fPending = false;
 	while (itf.IsTargetActive())
 	{
-		if (fPending == false 
-			&& !m_Device.ReadPipe(m_PipeIn, buffer, READ_BUFFER_BYTES, &xfered, &op))
+		if (!m_Device.ReadPipe(m_PipeIn, buffer, READ_BUFFER_BYTES, &xfered, NULL))
 		{
 			DWORD err = GetLastError();
-			if (err != ERROR_IO_PENDING)
+			if (err != ERROR_SEM_TIMEOUT)
 				break;
-			fPending = true;
 		}
-		// Wait for pending I/O
-		DWORD dw = WaitForSingleObject(op.hEvent, 100);
-		if (dw != WAIT_TIMEOUT && dw != WAIT_OBJECT_0)
+		if(xfered)
 		{
-			Error(_T("%hs: Error waiting for USB packet read\n"), __FUNCTION__);
-			break;
-		}
-		if (dw == WAIT_OBJECT_0)
-		{
-			fPending = false;
-			m_Device.GetOverlappedResult(&op, &xfered, FALSE);
 			buffer[xfered] = 0;
-			for(size_t i = 0; i < xfered; ++i)
+			for (size_t i = 0; i < xfered; ++i)
 				PumpData(itf, buffer[i]);
 		}
 	}

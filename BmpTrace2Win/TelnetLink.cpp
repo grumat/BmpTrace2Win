@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TelnetLink.h"
 #include "TheLogger.h"
+#include "AppConfig.h"
 
 
 using namespace Logger;
@@ -13,8 +14,9 @@ static void cleanup()
 }
 
 
-CTelnetLink::CTelnetLink()
-	: m_ListenSock(0)
+CTelnetLink::CTelnetLink(const ISwoFormatter &fmt)
+	: m_Fmt(fmt)
+	, m_ListenSock(0)
 	, m_AcceptSock(0)
 	, m_fEnableXmit(false)
 	, m_hReady(NULL)
@@ -71,13 +73,16 @@ void CTelnetLink::Close()
 
 void CTelnetLink::PutMessage(const SwoMessage &msg)
 {
-	if(IsListening())
+	if(!msg.IsClear())
 	{
-		CCritSecLock m_Lock(m_Lock);
-		m_SwoMessages.AddTail(msg);
+		if (IsListening())
+		{
+			CCritSecLock m_Lock(m_Lock);
+			m_SwoMessages.AddTail(msg);
+		}
+		if (m_hDoSend)
+			SetEvent(m_hDoSend);
 	}
-	if (m_hDoSend)
-		SetEvent(m_hDoSend);
 }
 
 
@@ -330,7 +335,7 @@ void CTelnetLink::ReadThread()
 				if (do_string)
 				{
 					// Echo any read information
-					payload.ctx = -1;
+					payload.chan = -1;
 					payload.msg = message.c_str();
 					PutMessage(payload);
 				}
@@ -389,7 +394,8 @@ void CTelnetLink::WriteThread()
 					CCritSecLock lock(m_Lock);
 					swo = m_SwoMessages.RemoveHead();
 				}
-				send(m_AcceptSock, swo.msg.GetString(), (int)swo.msg.GetLength(), 0);
+				CStringA out = m_Fmt.Format(swo);
+				send(m_AcceptSock, out.GetString(), (int)out.GetLength(), 0);
 			}
 		}
 		m_hWriteThread = 0;

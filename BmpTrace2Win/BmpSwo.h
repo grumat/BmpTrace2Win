@@ -55,4 +55,5 @@ protected:
 	int m_Addr;
 	BYTE m_RxPacket[5];
 	SwoMessage m_CurMessage;
+	bool m_fLFSeen;
 };

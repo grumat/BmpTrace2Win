@@ -1,6 +1,7 @@
 # BmpTrace2Win
 
-A tool to link TraceSWO USB pipe output from the Black Magic Probe to a Raw TCP port.
+A tool to link TraceSWO USB pipe output from the Black Magic Probe to the console or a Raw 
+TCP port.
 
 
 ## Motivation
@@ -14,7 +15,7 @@ hard earned time to develop the https://github.com/grumat/black-magic-probe-msp4
 project that is still under heavy development. So I searched some alternatives before starting 
 this, but was really not having luck with the current alternatives.
 
-Two options I've tried had its problems as decribed next.
+Three options I've tried had its issues as described next.
 
 
 ### swolisten.c
@@ -46,15 +47,21 @@ looks like, but it is the maintenance. Because software **DO** have bugs that so
 (Or simply throw it away).
 
 So I deny myself to execute a software written like this on my PC. It's a principle. If 
-someone can organize himself in a structured way, it can't help me. No one will buy a car
-with a complete mess under the hood!
+someone can't organize himself in a structured way, he/she also can't help me. 
+No one will buy a car with a complete mess under the hood!
+
+
+### Orbuculum
+
+No Windows port.
 
 
 ## Description of the tool
 
 The code here is a quick but *not so dirty* solution to a simple problem: I want to debug
 my firmware using SWD in my brilliant VisualGDB extension in my beloved Visual Studio.
-At one side of my desktop I have a Putty terminal where my trace output should be dumped.
+At one side of my desktop I have a console or Putty terminal where my trace output should 
+be dumped.
 
 So don't expect other features. The tool will not configure the BMP for you, such as 
 described in other docs about TraceSWO (including bmtrace).
@@ -65,8 +72,8 @@ the BMP's trace device and a Putty instance linked to it, you will get your trac
 Just that simple.
 
 Note that you could probably use the tool in an Eclipse or VSCode IDE, but the details
-you will have to try to solve yourself, as I see no reason to *downgrade* my almost 
-perfect development environment to check for other possibilities.
+you will have to try yourself, as I see no reason to *downgrade* my almost perfect 
+development environment to check for other possibilities.
 
 
 ## Setup
@@ -77,7 +84,7 @@ This are the required steps:
 - Setup your firmware to enable TraceSWO.
 - Setup VisualGDB to use the **Black Magic Probe** as your debugger, including TraceSWO.
 - Run an instance of **BmpTrace2Win**.
-- Configure Putty and connect.
+- Optionally configure and use Putty to receive results.
 - Run the debug session.
 
 
@@ -126,12 +133,12 @@ Then you need to setup advanced GDB connection commands, by clicking on the
 **Additional GDB Commands** tab.
 
 On the "before selecting target" field enter:
-```
+```batch
 set mem inaccessible-by-default off
 ```
 
 Then on the "during target selection" field enter:
-```
+```batch
 monitor swdp_scan
 monitor traceswo 720000
 attach 1
@@ -149,11 +156,13 @@ This is a simple console program. Just call it using command Prompt or double-cl
 Some IDE's allow the addition of a custom command, which is also the case of Visual 
 Studio. Apply the solution that is more easy for you.
 
+See later all console options, as this tool has two modes of operation.
+
 
 ### Putty
 
-Putty is a well known SSH program, but it also supports other connection types.
-Open Putty and create a profile for your connection.
+Putty is not required for the normal use, but if you opt to do so, some adjustments 
+are required. Open Putty and create a profile for your connection.
 
 The following should be configured:
 - For **connection type**, select `Other` and `Raw`.
@@ -165,6 +174,13 @@ The following should be configured:
   you are using other code page, such as `Win 1252`.
   - **Terminal:** Windows typically need to enable **Implicit CR in every LF** so
   your '\n' end-lines will work in the expected way.
+
+To interact with Putty terminal, you will need to start **BmpTrace2Win** differently 
+and enable TCP mode, like in this example:
+
+```batch
+BmpTrace2Win -p 2332
+```
 
 
 ### Running the Debug Session
@@ -187,9 +203,32 @@ because the following is condition is required for TraceSWO:
 > communication noise may happen until BMP and firmware are working in the same speed.
 
 
-## Known Limitation
+## Command line options
 
-- Tool is in a bare state and maybe missing many features.
+
+These are the command line option of **BmpTrace2Win**:
+- **-h**: Display a help message and stops the program
+- **-c \<ini-file\>**: Allows you to specify a path of the `.ini` file, having the color 
+configuration of your trace output. Note that the tool searches a file with the same 
+name of the executable and the `.ini` extension in the same directory of the executable. 
+A sample `.ini` file was provided in the repository.
+- **-m**: Enter monochrome mode. This is useful if your terminal does not support VT100
+colors. Newer Windows 10 versions accepts them, so this is useful if you use an old
+Windows installation.
+- **-p \<nnn\>**: Enables TCP mode. A raw text protocol pumps messages to the specified 
+port number. Please ensure that the firewall allows your to access the port.
+- **-v**: Increases the verbose level in the TCP mode. More debug messages are displayed 
+on the console. This option has no effect without the TCP mode, as it disturbs the 
+intended trace operation.
+
+
+## Known Limitations / Missing Features
+
+As this is a *one weekend project* it has a very small feature set. These are the points
+that needs surely more attention.
+- A command to setup the BMP for traceSWO would be handy, as a cold boot stops the feature
+and there is no independent way to accomplish this.
+- Add an option to specify a host name and pump SWO messages to a remote PC.
 - BMP hardware varies too much and if you are using a Chinese clone maybe your 
 hardware misses a resistor connecting TDO pin to the USART RX pin of the MCU. If
 this is your case, you will need a talented technician able to solder these 

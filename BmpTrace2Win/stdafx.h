@@ -49,6 +49,7 @@
 #include <comdef.h>
 #include <atlstr.h>
 #include <atltime.h>
+#include <atlpath.h>
 
 typedef CAtlArray<CString> CStringArray;
 
