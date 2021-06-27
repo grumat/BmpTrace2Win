@@ -1,0 +1,130 @@
+<html>
+
+<head>
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<title>WinUSBWrappers v1.02</title>
+<link href="./naughter.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<h2>WinUSBWrappers v1.02</h2>
+<p>Welcome to WinUSBWrappers, a C++ class to provide a complete C++ encapsulation 
+of the WinUSB API for USB devices on Windows. </p>
+<p>&nbsp;</p>
+<p>The class provided is <strong>WinUSB::CDevice </strong>which provides 
+a simple RAII wrapper for programming to the WinUSB API.
+</p>
+<p>&nbsp;</p>
+<table border="0">
+	<tr>
+		<td><a href="#Features">Features</a></td>
+	</tr>
+	<tr>
+		<td><a href="#Usage">Usage</a></td>
+	</tr>
+	<tr>
+		<td><a href="#Copyright">Copyright</a></td>
+	</tr>
+	<tr>
+		<td><a href="#History">History</a></td>
+	</tr>
+	<tr>
+		<td><a href="#Contact">Contacting the Author</a></td>
+	</tr>
+</table>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2><a name="Features"></a>Features </h2>
+<ul>
+	<li>Provides a simple C++ Header only module to easily encapsulate WinUSB.</li>
+	<li>Integrates with STL&#39;s and MFC's collection and string classes for easier client coding.</li>
+	<li>Should make it easier to use WinUSB from C++ going forward.</li>
+	<li>Provides a RAII wrapper for the WINUSB_INTERFACE_HANDLE handle of WinUSB 
+	as well as the HANDLE returned from the CreateFile call when opening a 
+	WinUSB device. </li>
+	<li>The class also provides generic enumeration of USB devices given a 
+	device interface GUID, a USB PID and / or VID. This enumeration also is 
+	customizable from client code using a function pointer callback.</li>
+</ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2><a name="Usage"></a>Usage</h2>
+<ul>
+	<li>To use the class in your project simply #include 
+	WinUSBWrappers.h in your application.</li>
+	<li>The classes are only supported on VC 2013 or later.</li>
+	<li>Included in the download is a VC 2013 console based test application which 
+	exercises all of the various functionality. If the sample app detects that 
+	you have an OSR FX2 Learning Kit device attached to your computer then it 
+	will exercise all of the functionality of this board via the WinUSBWrappers 
+	API methods. Even if you do not have one of these devices attached the 
+	sample app will demonstrate enumeration of USB devices using the 
+	WinUSB::CDevice::EnumerateDevices methods before it exits 
+	prematurely. For more information about this device, please see
+	<a href="http://www.osronline.com/hardware/osrfx2_32.pdf">
+	www.osronline.com/hardware/osrfx2_32.pdf</a> and
+	<a href="https://store.osr.com/product/osr-usb-fx2-learning-kit-v2/">
+	https://store.osr.com/product/osr-usb-fx2-learning-kit-v2/</a> to purchase 
+	one of these devices. Most of the Microsoft documentation related to WinUSB 
+	assumes you have one of these devices when learning WinUSB programming. 
+	Another resource worth reading is
+	<a href="https://www.osronline.com/article.cfm?article=532">
+	https://www.osronline.com/article.cfm?article=532</a> which provides a MFC 
+	wrapper class for WinUSB upon which WinUSBWrappers takes some inspiration.</li>
+	<li>For examples of all the WinUSBWrappers API methods please see the source 
+	code of the demo application in the WinUSBWrappersDemo.cpp module in the 
+	download.</li>
+	<li>To install the FX2 device using a specific device interface GUID you 
+	might want to take a look at <a href="http://zadig.akeo.ie/">
+	http://zadig.akeo.ie/</a> which allows a specific driver such as WinUSB to 
+	be associated with a specific USB device as well as automating creation of 
+	signed inf driver installation files.</li>
+</ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2><b><a name="Copyright"></a>Copyright</b></h2>
+<ul>
+	<li>You are allowed to include the source code in any product (commercial, shareware, 
+	freeware or otherwise) when your product is released in binary form.</li>
+	<li>You are allowed to modify the source code in any way you want except you 
+	cannot modify the copyright details at the top of each module.</li>
+	<li>If you want to distribute source code with your application, then you are 
+	only allowed to distribute versions released by the author. This is to maintain 
+	a single distribution point for the source code.</li>
+</ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2><a name="History"></a>History</h2>
+<p><b>V1.02 (30 October 2017)</b></p>
+<ul>
+	<li>Updated copyright details.</li>
+	<li>Added support for WinUsb_StartTrackingForTimeSync, 
+	WinUsb_GetCurrentFrameNumberAndQpc &amp; WinUsb_StopTrackingForTimeSync APIs.
+	</li>
+	<li>Replaced CString::operator LPC*STR() calls with CString::GetString 
+	calls.</li>
+</ul>
+<p><b>V1.01 (18 December 2015)</b></p>
+<ul>
+	<li>Removed unnecessary inclusion of &lt;functional&gt; from module.</li>
+</ul>
+<p><b>V1.0 (27 November 2015)</b></p>
+<ul>
+	<li>Initial Public release</li>
+</ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2><a name="Contact"></a>Contacting the Author</h2>
+<p>PJ Naughter<br>Email: <a href="mailto:pjna@naughter.com">pjna@naughter.com</a><br>
+Web: <a href="http://www.naughter.com">http://www.naughter.com</a><br>30 October 
+2017</p>
+
+</body>
+
+</html>
