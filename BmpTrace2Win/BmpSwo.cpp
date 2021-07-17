@@ -21,6 +21,7 @@ CBmpSwo::CBmpSwo()
 {
 	ZeroMemory(&m_DeviceDescriptor, sizeof(m_DeviceDescriptor));
 	ZeroMemory(&m_ConfigDescriptor, sizeof(m_ConfigDescriptor));
+	ZeroMemory(&m_RxPacket, sizeof(m_RxPacket));
 	SwoMessage::InitTimeBase();
 }
 
@@ -398,11 +399,15 @@ void CBmpSwo::HandleTS(ISwoTarget &itf)
 void CBmpSwo::HandleSWIT(ISwoTarget &itf)
 {
 	if (!m_CurMessage.IsClear() && m_Addr != m_CurMessage.chan)
+	{
+		m_CurMessage.msg += '\n';
 		Flush(itf);
+	}
 	m_CurMessage.chan = m_Addr;
 	for (size_t i = 0; i < m_CurCount; ++i)
 	{
 		char ch = m_RxPacket[i];
+		m_RxPacket[i] = 0;
 		if (ch == '\r' || ch == '\n')
 			m_fLFSeen = true;
 		else if (m_fLFSeen)

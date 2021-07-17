@@ -7,6 +7,7 @@
 #include "TelnetLink.h"
 #include "AppConfig.h"
 #include "TerminalLink.h"
+#include "version.h"
 
 
 using namespace Logger;
@@ -15,7 +16,7 @@ using namespace Logger;
 static int Usage(bool full)
 {
 	puts(
-		"BmpTrace2Win 0.1\n"
+		"BmpTrace2Win " APP_VER_S "\n"
 		"================\n"
 		"A proxy interface to dump the BMP Trace port to Windows Console.\n"
 		"You can optionally specify a TCP port to bind to a terminal, like Putty.\n"
@@ -229,7 +230,7 @@ unknown_switch:
 		SwoMessage payload;
 		payload.Clear();
 		payload.chan = 0;
-		payload.msg.Format("Logging started in %S\n", tm.Format(_T("%X")). GetString());
+		payload.msg.Format("BmpTrace2Win " APP_VER_S " - " "Logging started in %S\n", tm.Format(_T("%X")). GetString());
 		link->Send(payload);
 		// Enter main loop
 		swo.DoTrace(*link);

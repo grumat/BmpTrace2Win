@@ -143,6 +143,7 @@
     <ClInclude Include="TelnetLink.h" />
     <ClInclude Include="TerminalLink.h" />
     <ClInclude Include="TheLogger.h" />
+    <ClInclude Include="version.h" />
     <ClInclude Include="WinUSBWrappers\WinUSBWrappers.h" />
   </ItemGroup>
   <ItemGroup>

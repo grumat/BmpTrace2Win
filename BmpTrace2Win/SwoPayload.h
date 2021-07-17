@@ -11,10 +11,14 @@ struct SwoMessage
 	//! Stores message contents
 	CStringA msg;
 
+	SwoMessage()
+	{
+		chan = 0;
+		Clear();
+	}
 	//! Clears the object
 	void Clear()
 	{
-		chan = -1;
 		time = GetTickCount() - m_TimeBase;
 		msg.Empty();
 	}
@@ -41,7 +45,7 @@ public:
 	virtual ~ISwoTarget() {}
 	//! Checks if message transmission is still active
 	virtual bool IsTargetActive() const = 0;
-	//! Sends a SWo message to the target
+	//! Sends a SWO message to the target
 	virtual void Send(const SwoMessage &msg) = 0;
 	//! Closes target, freeing resources
 	virtual void Close() = 0;
