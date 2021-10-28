@@ -2,6 +2,9 @@
 
 #include "SwoPayload.h"
 
+// Flushes data that is stuck before a '\n' happens
+#define OPT_AUTO_FLUSH	0
+
 
 // Using an ATL map, instead of std::set, as STL keeps always being part of 
 // the problem and not the solution. Just another reason for C++ downfall...
@@ -18,7 +21,10 @@ public:
 		VID = 0x1d50,
 		PID = 0x6018,
 		MI = 0x05,
-		READ_BUFFER_BYTES = 4096
+		READ_BUFFER_BYTES = 4096,
+#if OPT_AUTO_FLUSH
+		SOFT_TIMEOUT = 50,
+#endif
 	};
 
 public:

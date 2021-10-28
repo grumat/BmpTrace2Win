@@ -5,7 +5,7 @@
 
 
 #define APP_VER		0
-#define APP_REV		2
+#define APP_REV		3
 
 #define APP_VER_S	MK_STR(APP_VER) "." MK_STR(APP_REV)
 

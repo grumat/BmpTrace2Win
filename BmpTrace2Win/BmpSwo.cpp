@@ -177,7 +177,7 @@ void CBmpSwo::Open()
 	{
 		DWORD dw = GetLastError();
 		if (dw == E_INVALIDARG)
-			Error(_T("This utility requires a WinUSB driver for the ICDI device\n"));
+			Error(_T("This utility requires a WinUSB driver for the BMP Trace device\n"));
 		AtlThrow(HRESULT_FROM_WIN32(dw));
 	}
 	m_PipeIn = m_PipeOut = 0;
@@ -420,37 +420,52 @@ void CBmpSwo::HandleSWIT(ISwoTarget &itf)
 }
 
 
+/*
+*	SWIT PACKET:
+*		| Byte 0 | B[4] | B[3] | B[2] | B[1] | B[0] |  0  | S[1] | S[0] |
+*		| Byte 1 |					Payload [7:0]						|
+*		| Byte 2 |					Payload [15:8]						|
+*		| Byte 3 |					Payload [23:16]						|
+*		| Byte 4 |					Payload [31:24]						|
+* 
+*	S[1:0]: Payload Size: 01=8, 10=16, 11=32, 00=invalid
+*	B[4:0]: 5 bits of address
+*	Payload[31:0]: Data written from the application
+* 
+*	Note: Method handles additional packets for BMP
+*/
 void CBmpSwo::PumpData(ISwoTarget &itf, const BYTE c)
 {
 	switch (m_PState)
 	{
-		// -----------------------------------------------------
+	// -----------------------------------------------------
 	case ITM_IDLE:
+		// Special BMP messages
 		if (c == 0b01110000)
 		{
-			/* This is an overflow packet */
+			// This is an overflow packet
 			Debug(_T("Overflow!\n"));
 			break;
 		}
 		// **********
 		if (c == 0)
 		{
-			/* This is a sync packet - expect to see 4 more 0's followed by 0x80 */
+			// This is a sync packet - expect to see 4 more 0's followed by 0x80
 			m_TargetCount = 4;
 			m_CurCount = 0;
 			m_PState = ITM_SYNCING;
 			break;
 		}
 		// **********
-		if (!(c & 0x0F))
+		if ((c & 0x0F) == 0)
 		{
 			m_CurCount = 1;
-			/* This is a timestamp packet */
+			// This is a timestamp packet
 			m_RxPacket[0] = c;
 
-			if (!(c & 0x80))
+			if ((c & 0x80) == 0)
 			{
-				/* A one byte output */
+				// A one byte output
 				HandleTS(itf);
 			}
 			else
@@ -462,13 +477,13 @@ void CBmpSwo::PumpData(ISwoTarget &itf, const BYTE c)
 		// **********
 		if ((c & 0x0F) == 0x04)
 		{
-			/* This is a reserved packet */
+			// This is a reserved packet
 			break;
 		}
 		// **********
-		if (!(c & 0x04))
+		if ((c & 0x04) == 0)
 		{
-			/* This is a SWIT packet */
+			// This is a SWIT packet (1, 2 or 4 bytes)
 			if ((m_TargetCount = c & 0x03) == 3)
 				m_TargetCount = 4;
 			m_Addr = (c & 0xF8) >> 3;
@@ -479,36 +494,36 @@ void CBmpSwo::PumpData(ISwoTarget &itf, const BYTE c)
 		// **********
 		Debug(_T("Illegal packet start in IDLE state\n"));
 		break;
-		// -----------------------------------------------------
+	// -----------------------------------------------------
 	case ITM_SWIT:
 		m_RxPacket[m_CurCount] = c;
 		m_CurCount++;
-
+		// 1, 2 or 4 bytes
 		if (m_CurCount >= m_TargetCount)
 		{
 			m_PState = ITM_IDLE;
 			HandleSWIT(itf);
 		}
 		break;
-		// -----------------------------------------------------
+	// -----------------------------------------------------
 	case ITM_TS:
 		m_RxPacket[m_CurCount++] = c;
 		if (!(c & 0x80))
 		{
-			/* We are done */
+			// We are done
 			HandleTS(itf);
 		}
 		else
 		{
 			if (m_CurCount > 4)
 			{
-				/* Something went badly wrong */
+				// Something went badly wrong
 				m_PState = ITM_IDLE;
 			}
 			break;
 		}
 
-		// -----------------------------------------------------
+	// -----------------------------------------------------
 	case ITM_SYNCING:
 		if ((c == 0) && (m_CurCount < m_TargetCount))
 		{
@@ -531,7 +546,6 @@ void CBmpSwo::PumpData(ISwoTarget &itf, const BYTE c)
 #endif
 		}
 		break;
-		// -----------------------------------------------------
 	}
 #ifdef PRINT_TRANSITIONS
 	Debug("%s\n", _protoNames[p]);
@@ -544,6 +558,9 @@ void CBmpSwo::DoTrace(ISwoTarget &itf)
 	BYTE buffer[READ_BUFFER_BYTES + 1];
 	ULONG xfered;
 
+#if OPT_AUTO_FLUSH
+	int tmout = 0;
+#endif
 	while (itf.IsTargetActive())
 	{
 		if (!m_Device.ReadPipe(m_PipeIn, buffer, READ_BUFFER_BYTES, &xfered, NULL))
@@ -557,7 +574,27 @@ void CBmpSwo::DoTrace(ISwoTarget &itf)
 			buffer[xfered] = 0;
 			for (size_t i = 0; i < xfered; ++i)
 				PumpData(itf, buffer[i]);
+#if OPT_AUTO_FLUSH
+			tmout = SOFT_TIMEOUT;
+#endif
 		}
+#if OPT_AUTO_FLUSH
+		else if (tmout)
+		{
+			/*
+			* Code was disabled: The issue is on how BMP implements the SWO capture.
+			* It uses two 64-byte buffers tied to a DMA channel that handles UART
+			* bytes using a ping-pong method. Packet is sent to USB in 64-byte requests.
+			* If a packet is not complete, it hangs inside until the buffer overflows.
+			* Firmware will require a kind of heart-beat to fill this buffer in a timely
+			* manner so message tails are finally flushed
+			*/
+			--tmout;
+			// Line may hang in objects buffer if no '\n' arrives. Do flush after 100 ms...
+			if (tmout == 0 && !m_CurMessage.IsClear())
+				Flush(itf);
+		}
+#endif
 	}
 }
 
