@@ -11,11 +11,11 @@ a Windows PC you probably aren't taking benefit of the **TraceSWO** feature as t
 tools are quite Linux-oriented.
 
 I am really not pleased on writing such a low level support tool as I was expecting to use my 
-hard earned time to develop the https://github.com/grumat/black-magic-probe-msp430 firmware 
+hard earned time to develop the https://github.com/grumat/glossy-msp430 firmware 
 project that is still under heavy development. So I searched some alternatives before starting 
 this, but was really not having luck with the current alternatives.
 
-Three options I've tried had its issues as described next.
+Three options I've tried, had its issues as described next.
 
 
 ### swolisten.c
@@ -193,7 +193,7 @@ BMP Trace output.
 > reach the network. Don't expect functionality if you deny access.
 
 Note that tracing will only work after the GDB session is launched by VisualGDB, 
-because the following is condition is required for TraceSWO:
+because the following condition is required for TraceSWO:
 - SWD mode (command `monitor swdp_scan`)
 - enabling SWO (command `monitor traceswo <speed-bps>`)
 
