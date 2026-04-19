@@ -116,6 +116,13 @@ bool CBmpSwo::CollectGuidInterfaces(SetOfGuids &guids)
 			err = dev_inst.QueryStringValue(_T("DeviceInterfaceGUID"), pBuf, &size);
 			if (err == ERROR_SUCCESS)
 			{
+				CString tmp;
+				if (*pBuf == _T('{'))
+				{
+					tmp = pBuf + 1;
+					tmp.Truncate(tmp.GetLength() - 1);
+					pBuf = (LPTSTR)tmp.GetString();
+				}
 				// Just parse the string
 				GUID guid;
 				if (UuidFromString((RPC_WSTR)pBuf, &guid) == RPC_S_OK)
