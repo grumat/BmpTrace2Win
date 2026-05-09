@@ -1,4 +1,4 @@
-// BmpTrace2Win.cpp : Define o ponto de entrada para a aplicação de console.
+// BmpTrace2Win.cpp : Define o ponto de entrada para a aplicaï¿½ï¿½o de console.
 //
 
 #include "stdafx.h"
@@ -222,20 +222,61 @@ unknown_switch:
 			raw_ftp->Serve(port);
 			link = raw_ftp;
 		}
-		// Connect to hardware
+		// Connect to hardware (first attempt is fatal so the user sees a diagnostic)
 		CBmpSwo swo;
 		swo.Open();
 		// Welcome message
-		CTime tm = CTime::GetCurrentTime();
-		SwoMessage payload;
-		payload.Clear();
-		payload.chan = 0;
-		payload.msg.Format("BmpTrace2Win " APP_VER_S " - " "Logging started in %S\n", tm.Format(_T("%X")). GetString());
-		link->Send(payload);
-		// Enter main loop
-		swo.DoTrace(*link);
-		// Stop USB pipe
-		swo.Close();
+		{
+			CTime tm = CTime::GetCurrentTime();
+			SwoMessage payload;
+			payload.Clear();
+			payload.chan = 0;
+			payload.msg.Format("BmpTrace2Win " APP_VER_S " - " "Logging started in %S\n", tm.Format(_T("%X")). GetString());
+			link->Send(payload);
+		}
+		// Main loop: trace until DoTrace returns. If the target sink is still active,
+		// the device was likely unplugged â€” keep trying to reattach once a second.
+		for (;;)
+		{
+			swo.DoTrace(*link);
+			swo.Close();
+			if (!link->IsTargetActive())
+				break;
+			// Notify the user once, then poll silently.
+			SwoMessage notice;
+			notice.Clear();
+			notice.chan = 0;
+			notice.msg = "BmpTrace2Win: USB device lost - waiting for reconnection...\n";
+			link->Send(notice);
+			// Suppress per-attempt error spam; restore the original level on success.
+			Level_e saved_level = TheLogger().GetLevel();
+			TheLogger().SetLevel(OFF);
+			bool reattached = false;
+			while (link->IsTargetActive())
+			{
+				Sleep(1000);
+				try
+				{
+					swo.Open();
+					reattached = true;
+					break;
+				}
+				catch (CAtlException &)
+				{
+					// Device still gone; ensure no half-open state lingers.
+					swo.Close();
+				}
+			}
+			TheLogger().SetLevel(saved_level);
+			if (!reattached)
+				break;
+			CTime tm = CTime::GetCurrentTime();
+			SwoMessage payload;
+			payload.Clear();
+			payload.chan = 0;
+			payload.msg.Format("BmpTrace2Win: reconnected at %S\n", tm.Format(_T("%X")).GetString());
+			link->Send(payload);
+		}
 		if (link)
 		{
 			link->Close();
