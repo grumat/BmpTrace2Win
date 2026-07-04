@@ -193,6 +193,7 @@ unknown_switch:
 		log_level = ERROR_LEVEL;
 
 	ISwoTarget *link = NULL;
+	FILE *pLogFile = NULL;
 	try
 	{
 		// Setup logger
@@ -205,6 +206,23 @@ unknown_switch:
 		cfg.LoadIni();
 		cfg.SetMonoChromeMode(fMonoChrome);
 
+		// Open log file
+		{
+			const CString &logPath = cfg.GetLogFile();
+			if (!logPath.IsEmpty())
+			{
+				if (_tfopen_s(&pLogFile, logPath, _T("a")) != 0)
+					pLogFile = NULL;
+				if (pLogFile)
+				{
+					TheLogger().SetLogFile(pLogFile);
+					CString tm = CTime::GetCurrentTime().Format(_T("%c"));
+					_ftprintf(pLogFile, _T("\n--- BmpTrace2Win " APP_VER_S " started %s ---\n"),
+						(LPCTSTR)tm);
+				}
+			}
+		}
+
 		// Create object to format the SWO messages using VT100 colors
 		SwoFormatter fmt(cfg);
 		if (port == 0)
@@ -212,12 +230,12 @@ unknown_switch:
 			if (fMonoChrome == false)
 				EnableVTMode();	// Enables VT100 on Windows 10 Anniversary update and later
 			// Terminal mode
-			link = new CTerminalLink(fmt);
+			link = new CTerminalLink(fmt, pLogFile);
 		}
 		else
 		{
 			// TCP mode
-			CTelnetLink *raw_ftp = new CTelnetLink(fmt);
+			CTelnetLink *raw_ftp = new CTelnetLink(fmt, pLogFile);
 			// Wait for Putty (RAW)
 			raw_ftp->Serve(port);
 			link = raw_ftp;
@@ -282,6 +300,11 @@ unknown_switch:
 			link->Close();
 			delete link;
 		}
+		if (pLogFile)
+		{
+			_ftprintf(pLogFile, _T("--- BmpTrace2Win ended ---\n"));
+			fclose(pLogFile);
+		}
 	}
 	catch (CAtlException &e)
 	{
@@ -292,6 +315,11 @@ unknown_switch:
 		{
 			link->Close();
 			delete link;
+		}
+		if (pLogFile)
+		{
+			_ftprintf(pLogFile, _T("--- BmpTrace2Win ended with error ---\n"));
+			fclose(pLogFile);
 		}
 	}
 	return EXIT_SUCCESS;

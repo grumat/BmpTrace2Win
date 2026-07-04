@@ -6,7 +6,7 @@
 class CTerminalLink : public ISwoTarget
 {
 public:
-	CTerminalLink(const ISwoFormatter &fmt);
+	CTerminalLink(const ISwoFormatter &fmt, FILE *pLogFile = NULL);
 	virtual ~CTerminalLink();
 
 	virtual bool IsTargetActive() const override;
@@ -15,6 +15,7 @@ public:
 
 protected:
 	const ISwoFormatter &m_Fmt;
+	FILE *m_pLogFile;
 };
 
 

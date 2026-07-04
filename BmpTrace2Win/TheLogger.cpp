@@ -8,6 +8,7 @@ CLogger *CLogger::m_pLogger = NULL;
 
 
 CLogger::CLogger()
+	: m_pLogFile(NULL)
 {
 #ifdef _DEBUG
 	m_nLevel = DETAIL_LEVEL;
@@ -119,6 +120,11 @@ void CStdioLogger::OnLog(Level_e level, const TCHAR *msg)
 		_fputts(s, stderr);
 		_fputts(msg, stderr);
 		ATLTRACE(_T("%s%s"), (LPCTSTR)s, (LPCTSTR)msg);
+	}
+	if (m_pLogFile)
+	{
+		_ftprintf(m_pLogFile, _T("%s%s"), (LPCTSTR)s, (LPCTSTR)msg);
+		fflush(m_pLogFile);
 	}
 }
 

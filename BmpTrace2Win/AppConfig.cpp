@@ -91,6 +91,7 @@ void CAppConfig::LoadColor(int channel, LPCTSTR szFore, LPCTSTR szBack, LPCTSTR 
 void CAppConfig::LoadIni()
 {
 	m_strResetClr = GetOneColor(_T("General"), _T("Reset"), _T("^[0m"));
+	m_strLogFile = GetValue(_T("General"), _T("LogFile"), _T(""));
 	LoadColor( 0, _T("^[97m"), _T("^[42m"), _T("Msg"));
 	LoadColor( 1, _T("^[97m"), _T("^[41m"), _T("Err"));
 	LoadColor( 2, _T("^[97m"), _T("^[45m"), _T("Dbg"));
@@ -122,7 +123,7 @@ void CAppConfig::LoadIni()
 	LoadColor(28, _T("^[96m"), _T("^[90m"));
 	LoadColor(29, _T("^[97m"), _T("^[90m"));
 	LoadColor(30, _T("^[37m"), _T("^[41m"));
-	LoadColor(31, _T("^[31m"), _T("^[41m"), _T("OS "));
+	LoadColor(31, _T("^[31m"), _T("^[41m"), _T("OSï¿½"));
 }
 
 
@@ -131,6 +132,30 @@ const CString &CAppConfig::GetTitle(int key) const
 	if (key < 0 || key >= _countof(m_strTitles))
 		key = 0;
 	return m_strTitles[key];
+}
+
+
+const CString &CAppConfig::GetLogFile() const
+{
+	if (!m_strLogFile.IsEmpty())
+		return m_strLogFile;
+	// Default to %TEMP%\BmpTrace2Win.log
+	static CString s_def;
+	if (s_def.IsEmpty())
+	{
+		TCHAR tmp[MAX_PATH];
+		if (GetEnvironmentVariable(_T("TEMP"), tmp, MAX_PATH))
+		{
+			CPath path(tmp);
+			path.Append(_T("BmpTrace2Win.log"));
+			s_def = path.m_strPath;
+		}
+		else
+		{
+			s_def = _T("BmpTrace2Win.log");
+		}
+	}
+	return s_def;
 }
 
 

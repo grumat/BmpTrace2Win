@@ -23,6 +23,7 @@ public:
 	void Log(Level_e level, const TCHAR *msg, va_list vargs);
 	Level_e GetLevel() { return m_nLevel; }
 	void SetLevel(Level_e n) { m_nLevel = n; }
+	void SetLogFile(FILE *pf) { m_pLogFile = pf; }
 
 public:
 	//! Replaces logger by a custom implementation
@@ -46,6 +47,7 @@ protected:
 	DWORD m_dwStartTick;
 	DWORD m_dwMainThreadID;
 	CComCriticalSection m_Lock;
+	FILE *m_pLogFile;
 
 private:
 	static void Dispose();

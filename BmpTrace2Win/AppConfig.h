@@ -19,6 +19,8 @@ public:
 	const CString &GetBackground(int key) const;
 	//! Retrieves the escape sequence to reset terminal colors
 	const CString &ResetColors() const;
+	//! Retrieves the path to the log file
+	const CString &GetLogFile() const;
 
 	void SetMonoChromeMode(bool mode) { m_fMonoChromeMode = mode; }
 
@@ -40,6 +42,8 @@ protected:
 	const CPath m_IniPath;
 	//! Escape sequence to reset terminal color attributes
 	CString m_strResetClr;
+	//! Path to the log file (empty = no logging)
+	CString m_strLogFile;
 	//! Title strings for each SWO channel
 	CString m_strTitles[32];
 	//! Text color for each SWO channel 

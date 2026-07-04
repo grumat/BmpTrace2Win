@@ -14,8 +14,9 @@ static void cleanup()
 }
 
 
-CTelnetLink::CTelnetLink(const ISwoFormatter &fmt)
+CTelnetLink::CTelnetLink(const ISwoFormatter &fmt, FILE *pLogFile)
 	: m_Fmt(fmt)
+	, m_pLogFile(pLogFile)
 	, m_ListenSock(0)
 	, m_AcceptSock(0)
 	, m_fEnableXmit(false)
@@ -373,6 +374,30 @@ void __cdecl CTelnetLink::WriteThread(LPVOID pThis)
 }
 
 
+static CStringA StripAnsiEscapes(const CStringA &s)
+{
+	CStringA out;
+	out.Preallocate(s.GetLength());
+	for (int i = 0; i < s.GetLength(); ++i)
+	{
+		char c = s[i];
+		if (c == '\x1b')
+		{
+			if (i + 1 < s.GetLength() && s[i + 1] == '[')
+			{
+				while (i < s.GetLength() && s[i] != 'm')
+					++i;
+			}
+		}
+		else
+		{
+			out += c;
+		}
+	}
+	return out;
+}
+
+
 void CTelnetLink::WriteThread()
 {
 	DWORD err = 0;
@@ -396,6 +421,12 @@ void CTelnetLink::WriteThread()
 				}
 				CStringA out = m_Fmt.Format(swo);
 				send(m_AcceptSock, out.GetString(), (int)out.GetLength(), 0);
+				if (m_pLogFile)
+				{
+					CStringA stripped = StripAnsiEscapes(out);
+					fputs(stripped, m_pLogFile);
+					fflush(m_pLogFile);
+				}
 			}
 		}
 		m_hWriteThread = 0;

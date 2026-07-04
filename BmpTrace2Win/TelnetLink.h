@@ -11,7 +11,7 @@ public:
 		READ_BUF_SIZE = 256,
 	};
 public:
-	CTelnetLink(const ISwoFormatter &fmt);
+	CTelnetLink(const ISwoFormatter &fmt, FILE *pLogFile = NULL);
 	virtual ~CTelnetLink();
 
 public:
@@ -34,6 +34,7 @@ protected:
 protected:
 	CAtlList<SwoMessage> m_SwoMessages;
 	const ISwoFormatter &m_Fmt;
+	FILE *m_pLogFile;
 
 protected:
 	SOCKET m_ListenSock;
