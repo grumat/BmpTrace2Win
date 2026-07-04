@@ -211,8 +211,7 @@ unknown_switch:
 			const CString &logPath = cfg.GetLogFile();
 			if (!logPath.IsEmpty())
 			{
-				if (_tfopen_s(&pLogFile, logPath, _T("a")) != 0)
-					pLogFile = NULL;
+				pLogFile = _tfsopen(logPath, _T("a"), _SH_DENYNO);
 				if (pLogFile)
 				{
 					TheLogger().SetLogFile(pLogFile);

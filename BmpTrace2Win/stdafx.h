@@ -1,6 +1,6 @@
-// stdafx.h : arquivo de inclusão para inclusões do sistema padrões,
-// ou inclusões específicas de projeto que são utilizadas frequentemente, mas
-// são modificadas raramente
+// stdafx.h : arquivo de inclusï¿½o para inclusï¿½es do sistema padrï¿½es,
+// ou inclusï¿½es especï¿½ficas de projeto que sï¿½o utilizadas frequentemente, mas
+// sï¿½o modificadas raramente
 //
 
 #pragma once
@@ -58,4 +58,4 @@ typedef CAtlArray<CString> CStringArray;
 #include "WinUSBWrappers/WinUSBWrappers.h"
 
 
-// TODO: adicionar referências de cabeçalhos adicionais que seu programa necessita
+// TODO: adicionar referï¿½ncias de cabeï¿½alhos adicionais que seu programa necessita
